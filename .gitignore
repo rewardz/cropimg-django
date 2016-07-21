@@ -1,1 +1,4 @@
 *.pyc
+build/*
+dist/*
+imgcrop_django.egg-info/*
