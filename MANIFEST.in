@@ -3,3 +3,4 @@ include CONTRIBUTORS
 include README.rst
 include MANIFEST.in
 recursive-include cropimg/static *
+recursive-include cropimg/templates *
