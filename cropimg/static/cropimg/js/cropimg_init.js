@@ -80,7 +80,6 @@ void(function() {
             data.cropimg_args = {
                 resultWidth: thumb_size[0], resultHeight: thumb_size[1],
                 displayFixingPositionsButtons: thumb_size[0] > 100,
-                displayFixingSizeButtons: thumb_size[0] > 100,
                 maxContainerWidth: 400, inputPrefix: "ci-" + data.my_id,
                 onChange: onCroppingSelectionChanged.bind(data),
                 onInit: onImgCropInit.bind(data)
