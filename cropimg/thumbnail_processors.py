@@ -4,7 +4,7 @@ except ImportError:
     import Image
 
 
-def crop_ci_box(im, size, ci_box=False, **kwargs):
+def crop_box(im, size, ci_box=False, **kwargs):
     """
     Crop image based on very specific pixel values (x,y,width,height)
 
