@@ -1,7 +1,5 @@
-from django.contrib import admin
 from cropimg.fields import CIImageField
 from cropimg.widgets import CIImgWidget
-from .models import SimpleModel
 
 
 class CIAdminMixin(object):
