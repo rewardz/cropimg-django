@@ -900,6 +900,7 @@
               };
               
               $('.ci-image-loader', self.main.imageContainer).remove();
+              self.main.options.onInit();
             };
             loader.src = this.main.image.attr('src');
         
@@ -1252,9 +1253,7 @@
 
       $(this).data('cropimg', Main.Reset);
       
-      $(window).trigger('resize');
-      
-      options.onInit();
+      $(window).trigger('resize');      
     });
   }
 })(jQuery);
