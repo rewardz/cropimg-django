@@ -5,22 +5,29 @@ void(function() {
             var reader = new FileReader();
             var thumbnail = $(thumbnail_data.thumbnail_image_id);
             thumbnail.attr('src', '');
-            $("#" + thumbnail_data.my_id).val("");
             if (thumbnail.data("cropimg")) {
-                thumbnail.data("cropimg").reset();
+                var cropimg = thumbnail.data("cropimg");
+                cropimg.reset();
+                //The plugin doesn't get totally destroyed so I delete it manually and remove it from window.resize event
+                cropimg = cropimg.main;
+                for (var prop in cropimg) {
+                    if (cropimg.hasOwnProperty(prop)) {delete cropimg[prop]}
+                }
+                $(window).off("resize");
             }
+            $("#" + thumbnail_data.my_id).val("");
             reader.onload = function (e) {
                 thumbnail = $(thumbnail_data.thumbnail_image_id);
-                thumbnail.attr('src', e.target.result);
+                set_thumbnail(thumbnail, e.target.result, thumbnail_data);
             }.bind(this);
 
             reader.readAsDataURL(this.files[0]);
         }
     }
 
-    function on_thumbnail_load(thumbnail_data) {
-        var thumbnail = $(this);
-        if (thumbnail.attr("src")) {
+    function set_thumbnail(thumbnail, src, thumbnail_data) {
+        if (src) {
+            thumbnail.attr("src", src);
             thumbnail.cropimg(thumbnail_data.cropimg_args);
         }
     }
@@ -40,15 +47,12 @@ void(function() {
         x = Math.round(x * ratio * -1);
         y = Math.round(y * ratio * -1);
 
-        var step = main.options.zoomStep / 1000;
-        main.imageData.proportions = ratio + step;
-        main.image.css({"left": x, "top": y });
-        main.Zooming.eventMouseClick();
 
-        main.CroppingResult.update(x, y,
-            main.options.resultWidth * parseFloat(main.CroppingResult.cropPercent),
-            main.options.resultHeight * parseFloat(main.CroppingResult.cropPercent),
-            true);
+        main.imageData.proportions = ratio;
+        main.Zooming.eventMouseClick("out");
+        main.Zooming.eventMouseClick("in");
+        main.CroppingResult.update(x, y);
+        main.image.css({"left": x, "top": y});
     }
 
     function onImgCropInit() {
@@ -56,20 +60,23 @@ void(function() {
         var $field = $("#" + data.my_id);
         var thumbnail_image = $(data.thumbnail_image_id);
         //If the field is not empty, update the cropimg to match its values
-        var x, y, w, h;
+        var x;
+        var y;
+        var w;
         var cropimg = thumbnail_image.data("cropimg");
         if ($field.val()) {
             var vallist = $field.val().split(",");
             x = parseInt(vallist[0]);
             y = parseInt(vallist[1]);
             w = parseInt(vallist[2]);
-            setTimeout(setImgCropData, 700, cropimg, x, y, w);
         } else { // No data set, default to whole image
-            setTimeout(setImgCropData, 700, cropimg, 0, 0);
+            x = y = 0;
+            w = 0;
         }
+        setImgCropData(cropimg, x, y, w);
     }
 
-    jQuery(function(){
+    jQuery(function() {
         var thumbnail_fields = $("input[data-type=thumbnail_field]");
         thumbnail_fields.each(function (_, my_field) {
             $field = $(my_field);
@@ -91,8 +98,7 @@ void(function() {
             var thumbnail_image = $(data.thumbnail_image_id);
             $field.data("thumbnail-data", data);
             image_field.change($.proxy(on_file_change, image_field[0], data));
-            thumbnail_image.load($.proxy(on_thumbnail_load, thumbnail_image[0], data));
-            thumbnail_image.attr("src", image_value);
+            set_thumbnail(thumbnail_image, image_value, data);
         });
     });
 }());
