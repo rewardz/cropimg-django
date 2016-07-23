@@ -24,6 +24,6 @@ class CIThumbnailWidget(Input):
                           "input_field": input_field}).content
 
     class Media:
-        js = ("cropimg/js/jquery_init.js", "cropimg/js/cropimg.jquery.min.js",
+        js = ("cropimg/js/jquery_init.js", "cropimg/js/cropimg.jquery.js",
               "cropimg/js/cropimg_init.js")
         css = {"all": ["cropimg/resource/cropimg.css"]}
