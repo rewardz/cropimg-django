@@ -82,7 +82,7 @@ void(function() {
             $field = $(my_field);
             var thumb_size = $field.attr("data-thumb-size").split(",").map(function(x) {return parseInt(x)});
             var data = {};
-            data.my_name = $field.attr("data-thumb-field");
+            data.my_name = $field.attr("data-thumb-field") || $field.attr("name");
             data.my_id = $field.attr("id");
             data.cropimg_args = {
                 resultWidth: thumb_size[0], resultHeight: thumb_size[1],
