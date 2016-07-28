@@ -5,7 +5,7 @@ from django.shortcuts import render
 class CIImgWidget(ClearableFileInput):
 
     def render(self, name, value, attrs=None):
-        attrs["data-value"] = value.url if value else ""
+        attrs["data-value"] = getattr(value, "url", "")
         return super(CIImgWidget, self).render(name, value, attrs)
 
 
