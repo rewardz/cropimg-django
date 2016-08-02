@@ -5,7 +5,10 @@ from django.shortcuts import render
 class CIImgWidget(ClearableFileInput):
 
     def render(self, name, value, attrs=None):
-        attrs["data-value"] = getattr(value, "url", "")
+        try:
+            attrs["data-value"] = getattr(value, "url", "")
+        except ValueError: # attribute has no file associated with it.
+            attrs["data-value"] = ""
         return super(CIImgWidget, self).render(name, value, attrs)
 
 
