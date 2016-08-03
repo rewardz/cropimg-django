@@ -1,5 +1,5 @@
 from django.forms.widgets import Input, ClearableFileInput
-from django.shortcuts import render
+from django.template.loader import render_to_string
 
 
 class CIImgWidget(ClearableFileInput):
@@ -21,10 +21,11 @@ class CIThumbnailWidget(Input):
             attrs.update(self.attrs)
             attrs["type"] = "hidden"
         input_field = super(CIThumbnailWidget, self).render(name, value, attrs)
-        return render(None, "cropimg/cropimg_widget.html",
-                      context={
-                          "name": name, "value": value, "attrs": attrs,
-                          "input_field": input_field}).content
+        return render_to_string("cropimg/cropimg_widget.html",
+                                {
+                                    "name": name, "value": value, "attrs": attrs,
+                                    "input_field": input_field
+                                })
 
     class Media:
         js = ("cropimg/js/jquery_init.js", "cropimg/js/cropimg.jquery.js",
