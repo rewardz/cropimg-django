@@ -1,5 +1,5 @@
 from django.db import models
-import forms
+from . import forms
 from .widgets import CIThumbnailWidget
 
 
