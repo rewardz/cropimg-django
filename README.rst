@@ -60,6 +60,21 @@ Installation
         img_display = CIThumbnailField('my_img', (600, 400), blank=True, null=True)
         img_thumbnail = CIThumbnailField('my_img', (200, 200), blank=True, null=True)
 
+        def get_thumbnail(self, size, value, default_url=""):
+            if not self.my_img:
+                return default_url
+            return get_thumbnailer(self.img).get_thumbnail({
+                'size': size,
+                'ci_box': value,
+            }).url
+
+        def get_display_img_url():
+            return self.get_thumbnail((600, 400), self.img_display)
+
+        def get_thumbnail_img_url():
+            return self.get_thumbnail((200, 200), self.img_thumbnail)
+
+
 
 *CIImageField* accept same paramters as *ImageField* and can replace it without any code change.
 *CIThumbnailField* require field_name which you are generating thumbnail for & desired thumbnail size.
