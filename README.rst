@@ -4,6 +4,8 @@ django cropimg
 
 Django app for generating thumbnails based on easythumbnails and cropimg js library.
 
+.. image:: https://raw.githubusercontent.com/rewardz/cropimg-django/master/screenshots/admin.png 
+
 Main features
 -------------
 
