@@ -28,7 +28,7 @@ Installation
 ------------------
 
 1. Add to requirements.txt::
-  ``git+https://github.com/rewardz/cropimg-django.git@master#egg=cropimg-django django-model-helpers==1.2.1``
+  ``git+https://github.com/rewardz/cropimg-django.git@master#egg=cropimg-django``
 
 2. Include cropimg thumbnail processor in easythumbnails settings (settings.py)
 
