@@ -53,6 +53,7 @@ Installation
 
 .. code:: python
 
+    from easy_thumbnails.files import get_thumbnailer
     from cropimg.fields import CIImageField, CIThumbnailField
 
     class MyModel(models.Model):
