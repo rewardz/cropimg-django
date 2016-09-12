@@ -25,10 +25,10 @@ A fork of `cropimg <http://requtize.github.io/cropimg/>`_ was used as the Javasc
 Installation
 ------------------
 
-1. add to requirements.txt::
+1. Add to requirements.txt::
   ``git+https://github.com/rewardz/cropimg-django.git@master#egg=cropimg-django django-model-helpers==1.2.1``
 
-2. include cropimg thumbnail processor in easythumbnails settings (settings.py)
+2. Include cropimg thumbnail processor in easythumbnails settings (settings.py)
 
 .. code:: python
 
@@ -36,8 +36,18 @@ Installation
     THUMBNAIL_PROCESSORS = (
         'cropimg.thumbnail_processors.crop_box',
     ) + ThumbnailSettings.THUMBNAIL_PROCESSORS
+3. Include cropimg to your installed apps (settings.py)
 
-3. Add thumbnail fields to your model
+.. code:: python
+
+    INSTALLED_APPS = [
+        'django.contrib.admin',
+        'django.contrib.auth',
+        ...
+        'cropimg',
+    ]
+
+4. Add thumbnail fields to your model
 
 .. code:: python
 
@@ -52,7 +62,7 @@ Installation
 *CIImageField* accept same paramters as *ImageField* and can replace it without any code change.
 *CIThumbnailField* require field_name which you are generating thumbnail for & desired thumbnail size.
 
-4. in admin.py add
+5. in admin.py add
 
 .. code:: python
 
