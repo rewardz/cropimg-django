@@ -4,6 +4,8 @@ django cropimg
 
 Django app for generating thumbnails based on easythumbnails and cropimg js library.
 
+.. image:: https://raw.githubusercontent.com/rewardz/cropimg-django/master/screenshots/admin.png 
+
 Main features
 -------------
 
@@ -26,7 +28,7 @@ Installation
 ------------------
 
 1. Add to requirements.txt::
-  ``git+https://github.com/rewardz/cropimg-django.git@master#egg=cropimg-django django-model-helpers==1.2.1``
+  ``git+https://github.com/rewardz/cropimg-django.git@master#egg=cropimg-django``
 
 2. Include cropimg thumbnail processor in easythumbnails settings (settings.py)
 
@@ -51,12 +53,28 @@ Installation
 
 .. code:: python
 
+    from easy_thumbnails.files import get_thumbnailer
     from cropimg.fields import CIImageField, CIThumbnailField
 
     class MyModel(models.Model):
         my_img = CIImageField(upload_to="images/", blank=True, null=True)
         img_display = CIThumbnailField('my_img', (600, 400), blank=True, null=True)
         img_thumbnail = CIThumbnailField('my_img', (200, 200), blank=True, null=True)
+
+        def get_thumbnail(self, size, value, default_url=""):
+            if not self.my_img:
+                return default_url
+            return get_thumbnailer(self.img).get_thumbnail({
+                'size': size,
+                'ci_box': value,
+            }).url
+
+        def get_display_img_url():
+            return self.get_thumbnail((600, 400), self.img_display)
+
+        def get_thumbnail_img_url():
+            return self.get_thumbnail((200, 200), self.img_thumbnail)
+
 
 
 *CIImageField* accept same paramters as *ImageField* and can replace it without any code change.
