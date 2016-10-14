@@ -33,6 +33,8 @@ void(function() {
     }
 
     function onCroppingSelectionChanged(x, y, width, height) {
+        //Invalid data, skip
+        if (width <= 0 || height <= 0) return;
         var data = this;
         var input = $("#" + data.my_id);
         x *= -1;
@@ -46,7 +48,6 @@ void(function() {
         var ratio = main.imageContainer.width() / w;
         x = Math.round(x * ratio * -1);
         y = Math.round(y * ratio * -1);
-
 
         main.imageData.proportions = ratio;
         main.Zooming.eventMouseClick("out");
@@ -76,10 +77,13 @@ void(function() {
         setImgCropData(cropimg, x, y, w);
     }
 
-    jQuery(function() {
+    window.initialize_cropimg_fields = function() {
         var thumbnail_fields = $("input[data-type=thumbnail_field]");
         thumbnail_fields.each(function (_, my_field) {
             $field = $(my_field);
+            //If field already initialized, move on
+            if ($field.data("thumbnail-data")) return;
+
             var thumb_size = $field.attr("data-thumb-size").split(",").map(function(x) {return parseInt(x)});
             var data = {};
             data.my_name = $field.attr("data-thumb-field") || $field.attr("name");
@@ -91,6 +95,7 @@ void(function() {
                 onChange: onCroppingSelectionChanged.bind(data),
                 onInit: onImgCropInit.bind(data)
             };
+            //Thumbnail names should be based on field name to avoid conflict in case of formsets
             data.image_field_id = "#" + data.my_id.replace(data.my_name, $field.attr("data-image-field"));
             var image_field = $(data.image_field_id);
             var image_value = image_field.attr("data-value");
@@ -100,6 +105,10 @@ void(function() {
             image_field.change($.proxy(on_file_change, image_field[0], data));
             set_thumbnail(thumbnail_image, image_value, data);
         });
-    });
+    };
+
+    //When initializing cropimg then reinitialize it again (for example when your form is part of dynamically loaded content),
+    //bugs starts to appear related to image size, adding 200 millisec delay seems to solve the problem
+    jQuery(function() {setTimeout(window.initialize_cropimg_fields, 200)});
 }());
 
