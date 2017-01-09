@@ -1,7 +1,5 @@
-try:
-    from PIL import Image
-except ImportError:
-    import Image
+import logging
+logger = logging.getLogger("cropimg")
 
 
 def crop_box(im, size, ci_box=False, **kwargs):
@@ -17,16 +15,21 @@ def crop_box(im, size, ci_box=False, **kwargs):
     assert isinstance(ci_box, basestring)
     try:
         x, y, width, height = [int(i) for i in ci_box.split(",")]
-    except ValueError as e:
+    except ValueError as ex:
         # try to guess why the exception happened
         values = ci_box.split(",")
         if len(values) != 4:
             raise ValueError("crop_box must contain exactly 4 values x,y,width,height")
         raise ValueError("crop_box processor got the following error"
-                         "when processing the value %s\n%s" % (ci_box, e.message))
+                         "when processing the value %s\n%s" % (ci_box, ex.message))
 
-    if width <= 0 or height <= 0:
-        # That's basically an unintialized value
+    if min(width, height, width + x + 1, height + y + 1) <= 0:
+        # Uninitialized or meaningless value
+        return im
+
+    # Prevent running out of memory in case of huge value for thumbnail box size (i.e 0,0,117334,117334)
+    if x + width > im.size[0] * 2 or y + height > im.size[1] * 2:
+        logger.warn("Ignoring thumbnail dimensions %s, thumbnail too large", ci_box)
         return im
 
     # Handle one-dimensional targets.
