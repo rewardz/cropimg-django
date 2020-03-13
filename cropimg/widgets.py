@@ -16,7 +16,7 @@ class CIThumbnailWidget(Input):
 
     input_type = "text"
 
-    def render(self, name, value, attrs=None):
+    def render(self, name, value, attrs=None, renderer=None):
         if attrs:
             attrs.update(self.attrs)
             attrs["type"] = "hidden"
