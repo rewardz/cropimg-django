@@ -4,7 +4,7 @@ from django.template.loader import render_to_string
 
 class CIImgWidget(ClearableFileInput):
 
-    def render(self, name, value, attrs=None):
+    def render(self, name, value, attrs=None, renderer=None, **kwargs):
         try:
             attrs["data-value"] = getattr(value, "url", "")
         except ValueError: # attribute has no file associated with it.
@@ -16,7 +16,7 @@ class CIThumbnailWidget(Input):
 
     input_type = "text"
 
-    def render(self, name, value, attrs=None, renderer=None):
+    def render(self, name, value, attrs=None, renderer=None, **kwargs):
         if attrs:
             attrs.update(self.attrs)
             attrs["type"] = "hidden"
