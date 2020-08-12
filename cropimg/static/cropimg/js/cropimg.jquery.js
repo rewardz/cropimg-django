@@ -1256,4 +1256,4 @@
       $(window).trigger('resize');      
     });
   }
-})(jQuery);
+})(django.jQuery);

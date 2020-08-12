@@ -1,4 +1,4 @@
-void(function() {
+void(function($) {
 
     function on_file_change(thumbnail_data) {
         if (this.files && this.files[0]) {
@@ -109,6 +109,6 @@ void(function() {
 
     //When initializing cropimg then reinitialize it again (for example when your form is part of dynamically loaded content),
     //bugs starts to appear related to image size, adding 200 millisec delay seems to solve the problem
-    jQuery(function() {setTimeout(window.initialize_cropimg_fields, 200)});
-}());
+    $(function() {setTimeout(window.initialize_cropimg_fields, 200)});
+}(django.jQuery));
 
