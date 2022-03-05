@@ -12,7 +12,7 @@ def crop_box(im, size, ci_box=False, **kwargs):
     if not ci_box:
         return im
 
-    assert isinstance(ci_box, basestring)
+    assert isinstance(ci_box, str)
     try:
         x, y, width, height = [int(i) for i in ci_box.split(",")]
     except ValueError as ex:
