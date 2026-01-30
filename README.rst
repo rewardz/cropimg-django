@@ -125,7 +125,7 @@ Available commands:
 make help
   Displays all available Makefile commands.
 
-make test_install_django18
+make install_django18
   Installs test dependencies required for Django 1.8.
 
 make test
