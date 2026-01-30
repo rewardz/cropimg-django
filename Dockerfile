@@ -34,14 +34,17 @@ RUN pip install --upgrade \
     setuptools==44.1.1 \
     wheel==0.37.1
 
-# Copy only requirements
 COPY requirements/ /code/requirements/
 
-# ---------- Django 1.8 image ----------
-FROM base AS cropimg-django18
+# ---------- Django image ----------
+FROM base AS cropimg
 
-RUN pip install -r /code/requirements/django18/test.txt
+# Build argument with default value
+ARG REQUIREMENTS_FILE=requirements/django18/test.txt
+
+# Install dependencies dynamically
+RUN pip install -r /code/${REQUIREMENTS_FILE}
 
 COPY . /code/
 
-CMD ["make", "help"]
+CMD ["make", "test_with_coverage"]
