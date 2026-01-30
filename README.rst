@@ -97,3 +97,19 @@ Using with Django tempales
 1. make sure you've included jQuery in yoru template
 2. include your form dependencies ``{form.media}``
 3. just render your form as usual ``{{form.as_p}}``
+
+Running docker container in local for Django 1.8
+--------------------------
+**Build image and run container to run testcases:**
+
+1. ``docker build --target cropimg-django18 -t cropimg-django18 .``
+
+2. ``docker run -it feeds_image:latest``
+
+**RUN below command to enter into docker shell**
+
+``docker run -it --rm cropimg-django18:latest bash``
+
+**Once you're inside docker shell, then Run below commands for test cases:**
+
+``make test``
