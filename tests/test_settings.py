@@ -1,6 +1,7 @@
 import os
 from easy_thumbnails.conf import Settings as ThumbnailSettings
 
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 SECRET_KEY = "test"
