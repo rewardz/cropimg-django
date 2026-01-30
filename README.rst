@@ -113,3 +113,26 @@ Running docker container in local for Django 1.8
 **Once you're inside docker shell, then Run below commands for test cases:**
 
 ``make test``
+
+Makefile Commands
+-----------------
+
+The project includes a ``Makefile`` to simplify testing tasks.
+All targets are defined as ``.PHONY`` so they always execute when called.
+
+Available commands:
+
+make help
+  Displays all available Makefile commands.
+
+make test_install_django18
+  Installs test dependencies required for Django 1.8.
+
+make test
+  Runs the complete test suite using pytest.
+
+make test_with_coverage
+  Executes the test suite and shows a coverage report in the terminal.
+
+make build_with_django_18
+  Build and run docker image with django 1.8
