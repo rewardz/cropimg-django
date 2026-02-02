@@ -97,3 +97,42 @@ Using with Django tempales
 1. make sure you've included jQuery in yoru template
 2. include your form dependencies ``{form.media}``
 3. just render your form as usual ``{{form.as_p}}``
+
+Running docker container in local for Django 1.8
+--------------------------
+**Build image and run container to run testcases:**
+
+1. ``docker build --target cropimg-django18 -t cropimg-django18 .``
+
+2. ``docker run -it feeds_image:latest``
+
+**RUN below command to enter into docker shell**
+
+``docker run -it --rm cropimg-django18:latest bash``
+
+**Once you're inside docker shell, then Run below commands for test cases:**
+
+``make test``
+
+Makefile Commands
+-----------------
+
+The project includes a ``Makefile`` to simplify testing tasks.
+All targets are defined as ``.PHONY`` so they always execute when called.
+
+Available commands:
+
+make help
+  Displays all available Makefile commands.
+
+make install_django18
+  Installs test dependencies required for Django 1.8.
+
+make test
+  Runs the complete test suite using pytest.
+
+make test_with_coverage
+  Executes the test suite and shows a coverage report in the terminal.
+
+make build_with_django_18
+  Build and run docker image with django 1.8
