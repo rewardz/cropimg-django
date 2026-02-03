@@ -1,5 +1,5 @@
 coverage==5.5
-Django==1.8.14
+Django==4.2.27
 easy-thumbnails==2.2
 Pillow==2.9.0
 py==1.11.0
