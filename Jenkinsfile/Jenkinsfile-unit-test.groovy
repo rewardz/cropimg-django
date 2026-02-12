@@ -199,11 +199,11 @@ spec:
                 tty: true
                 resources:
                   limits:
-                      cpu: "512m"
-                      memory: "512Mi"
+                      cpu: "256m"
+                      memory: "256Mi"
                   requests:
-                      cpu: "512m"
-                      memory: "512Mi"
+                      cpu: "256m"
+                      memory: "256Mi"
           """
           }
       }
