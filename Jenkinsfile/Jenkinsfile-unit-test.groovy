@@ -136,7 +136,7 @@ spec:
                   echo Build Final Image
                   nerdctl build \
                     --file ${DOCKERFILE} \
-                    --target test \
+                    --target cropimg \
                     --progress=plain -t ${ECR_REGISTRY}/${FINAL_IMAGE}:${IMAGE_TAG} .
                   nerdctl push ${ECR_REGISTRY}/${FINAL_IMAGE}:${IMAGE_TAG}
                   
