@@ -27,11 +27,11 @@ spec:
       tty: true
       resources:
         requests:
-          memory: "1024Mi"
-          cpu: "1024m"
+          memory: "512Mi"
+          cpu: "512m"
         limits:
-          memory: "1024Mi"
-          cpu: "1024m"
+          memory: "512Mi"
+          cpu: "512m"
       volumeMounts:
       - name: containerd-socket
         mountPath: /run/containerd/containerd.sock
@@ -55,11 +55,11 @@ spec:
         privileged: true
       resources:
         requests:
-          memory: "2048Mi"
-          cpu: "2048m"
+          memory: "512Mi"
+          cpu: "512m"
         limits:
-          memory: "2048Mi"
-          cpu: "2048m"
+          memory: "512Mi"
+          cpu: "512m"
       volumeMounts:
         - name: buildkit-socket
           mountPath: /run/buildkit
