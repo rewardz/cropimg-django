@@ -106,7 +106,6 @@ spec:
               touch ~/.ssh/known_hosts 
               ssh -T -o StrictHostKeyChecking=no git@github.com || true
               git config --global --add safe.directory '*'
-              env
             '''
           }
         }
