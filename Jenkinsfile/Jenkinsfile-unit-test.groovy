@@ -117,6 +117,11 @@ spec:
             container('nerdctl') {
               script {
                 dockerLogin(ECR_REGISTRY, AWS_REGION)
+                
+                // Determine cache tag: use IMAGE_TAG if exists in ECR, else fallback to 'dev'
+                def cacheTag = getCacheTag(FINAL_IMAGE, IMAGE_TAG, AWS_REGION)
+                echo "Using cache tag: ${cacheTag}"
+                
                 sh """
                   # Wait for buildkit to be ready
                   until buildctl --addr unix:///run/buildkit/buildkitd.sock debug workers; do
@@ -135,7 +140,9 @@ spec:
                   nerdctl build \
                     --file ${DOCKERFILE} \
                     --target cropimg \
-                    --progress=plain -t ${ECR_REGISTRY}/${FINAL_IMAGE}:${IMAGE_TAG} .
+                    --progress=plain -t ${ECR_REGISTRY}/${FINAL_IMAGE}:${IMAGE_TAG} \
+                    --cache-to mode=max,image-manifest=true,oci-mediatypes=true,type=registry,ref=${ECR_REGISTRY}/${FINAL_IMAGE}:${cacheTag} \
+                    --cache-from type=registry,ref=${ECR_REGISTRY}/${FINAL_IMAGE}:${cacheTag} .
                   nerdctl push ${ECR_REGISTRY}/${FINAL_IMAGE}:${IMAGE_TAG}
                   
                   echo "Cleaning up final image from local storage"
@@ -245,4 +252,32 @@ def setTags(SOURCE_BRANCH, PR_NUM) {
     }
 
     return [IMAGE_TAG: IMAGE_TAG]
+}
+
+def getCacheTag(repoName, imageTag, awsRegion) {
+    // Check if IMAGE_TAG exists in ECR
+    def imageTagExists = sh(
+        script: "aws ecr describe-images --repository-name ${repoName} --image-ids imageTag=${imageTag} --region ${awsRegion} > /dev/null 2>&1",
+        returnStatus: true
+    ) == 0
+
+    if (imageTagExists) {
+        echo "Image with tag ${imageTag} found in ECR, using it as cache source"
+        return imageTag
+    }
+
+    // Fallback to dev tag
+    def devTagExists = sh(
+        script: "aws ecr describe-images --repository-name ${repoName} --image-ids imageTag=dev --region ${awsRegion} > /dev/null 2>&1",
+        returnStatus: true
+    ) == 0
+
+    if (devTagExists) {
+        echo "Falling back to 'dev' tag as cache source"
+        return "dev"
+    }
+
+    // No cache available, use IMAGE_TAG anyway (will just miss cache)
+    echo "No existing cache found, will create new cache with tag: ${imageTag}"
+    return imageTag
 }
