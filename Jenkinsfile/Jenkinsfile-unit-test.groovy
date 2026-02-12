@@ -87,6 +87,7 @@ spec:
     SOURCE_BRANCH = "${env.CHANGE_BRANCH}"
     tags = setTags(SOURCE_BRANCH, PR_NUM)
     IMAGE_TAG = "${tags.IMAGE_TAG}"
+    CACHE_TAG = "${tags.CACHE_TAG}"
     DOCKERFILE = 'Dockerfile'
   }
   stages {
@@ -118,9 +119,9 @@ spec:
               script {
                 dockerLogin(ECR_REGISTRY, AWS_REGION)
                 
-                // Determine cache tag: use IMAGE_TAG if exists in ECR, else fallback to 'dev'
-                def cacheTag = getCacheTag(FINAL_IMAGE, IMAGE_TAG, AWS_REGION)
-                echo "Using cache tag: ${cacheTag}"
+                // Determine cache source: use CACHE_TAG if exists, else fallback to 'dev-cache'
+                def cacheFromRef = getCacheFromRef(ECR_REGISTRY, FINAL_IMAGE, CACHE_TAG, AWS_REGION)
+                echo "Using cache from: ${cacheFromRef}"
                 
                 sh """
                   # Wait for buildkit to be ready
@@ -141,8 +142,8 @@ spec:
                     --file ${DOCKERFILE} \
                     --target cropimg \
                     --progress=plain -t ${ECR_REGISTRY}/${FINAL_IMAGE}:${IMAGE_TAG} \
-                    --cache-to mode=max,image-manifest=true,oci-mediatypes=true,type=registry,ref=${ECR_REGISTRY}/${FINAL_IMAGE}:${cacheTag} \
-                    --cache-from type=registry,ref=${ECR_REGISTRY}/${FINAL_IMAGE}:${cacheTag} .
+                    --cache-to mode=max,image-manifest=true,oci-mediatypes=true,type=registry,ref=${ECR_REGISTRY}/${FINAL_IMAGE}:${CACHE_TAG} \
+                    --cache-from type=registry,ref=${cacheFromRef} .
                   nerdctl push ${ECR_REGISTRY}/${FINAL_IMAGE}:${IMAGE_TAG}
                   
                   echo "Cleaning up final image from local storage"
@@ -244,40 +245,43 @@ def dockerLogin(ecrRegistry, awsRegion) {
 
 def setTags(SOURCE_BRANCH, PR_NUM) {
     def IMAGE_TAG
+    def CACHE_TAG
 
     if (SOURCE_BRANCH == 'dev' || SOURCE_BRANCH == 'master') {
         IMAGE_TAG = "${SOURCE_BRANCH}-${PR_NUM}"
+        CACHE_TAG = "${SOURCE_BRANCH}-cache"
     } else {
         IMAGE_TAG = "pr-${PR_NUM}"
+        CACHE_TAG = "pr-${PR_NUM}-cache"
     }
 
-    return [IMAGE_TAG: IMAGE_TAG]
+    return [IMAGE_TAG: IMAGE_TAG, CACHE_TAG: CACHE_TAG]
 }
 
-def getCacheTag(repoName, imageTag, awsRegion) {
-    // Check if IMAGE_TAG exists in ECR
-    def imageTagExists = sh(
-        script: "aws ecr describe-images --repository-name ${repoName} --image-ids imageTag=${imageTag} --region ${awsRegion} > /dev/null 2>&1",
+def getCacheFromRef(ecrRegistry, repoName, cacheTag, awsRegion) {
+    // Check if CACHE_TAG exists in ECR
+    def cacheTagExists = sh(
+        script: "aws ecr describe-images --repository-name ${repoName} --image-ids imageTag=${cacheTag} --region ${awsRegion} > /dev/null 2>&1",
         returnStatus: true
     ) == 0
 
-    if (imageTagExists) {
-        echo "Image with tag ${imageTag} found in ECR, using it as cache source"
-        return imageTag
+    if (cacheTagExists) {
+        echo "Cache with tag ${cacheTag} found in ECR, using it as cache source"
+        return "${ecrRegistry}/${repoName}:${cacheTag}"
     }
 
-    // Fallback to dev tag
-    def devTagExists = sh(
-        script: "aws ecr describe-images --repository-name ${repoName} --image-ids imageTag=dev --region ${awsRegion} > /dev/null 2>&1",
+    // Fallback to dev-cache tag
+    def devCacheExists = sh(
+        script: "aws ecr describe-images --repository-name ${repoName} --image-ids imageTag=dev-cache --region ${awsRegion} > /dev/null 2>&1",
         returnStatus: true
     ) == 0
 
-    if (devTagExists) {
-        echo "Falling back to 'dev' tag as cache source"
-        return "dev"
+    if (devCacheExists) {
+        echo "Falling back to 'dev-cache' tag as cache source"
+        return "${ecrRegistry}/${repoName}:dev-cache"
     }
 
-    // No cache available, use IMAGE_TAG anyway (will just miss cache)
-    echo "No existing cache found, will create new cache with tag: ${imageTag}"
-    return imageTag
+    // No cache available, return the original cache tag (will just miss cache)
+    echo "No existing cache found, will create new cache with tag: ${cacheTag}"
+    return "${ecrRegistry}/${repoName}:${cacheTag}"
 }
