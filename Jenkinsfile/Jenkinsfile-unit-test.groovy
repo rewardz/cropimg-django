@@ -86,7 +86,6 @@ spec:
     AWS_REGION = 'ap-southeast-1'
     SOURCE_BRANCH = "${env.CHANGE_BRANCH}"
     tags = setTags(SOURCE_BRANCH, PR_NUM)
-    CACHE_TAG = "${tags.CACHE_TAG}"
     IMAGE_TAG = "${tags.IMAGE_TAG}"
     DOCKERFILE = 'Dockerfile'
   }
@@ -238,15 +237,12 @@ def dockerLogin(ecrRegistry, awsRegion) {
 
 def setTags(SOURCE_BRANCH, PR_NUM) {
     def IMAGE_TAG
-    def CACHE_TAG
 
     if (SOURCE_BRANCH == 'dev' || SOURCE_BRANCH == 'master') {
         IMAGE_TAG = "${SOURCE_BRANCH}-${PR_NUM}"
-        CACHE_TAG = "${SOURCE_BRANCH}-cache"
     } else {
         IMAGE_TAG = "pr-${PR_NUM}"
-        CACHE_TAG = "cache-${PR_NUM}"
     }
 
-    return [IMAGE_TAG: IMAGE_TAG, CACHE_TAG: CACHE_TAG]
+    return [IMAGE_TAG: IMAGE_TAG]
 }
