@@ -21,7 +21,7 @@ def crop_box(im, size, ci_box=False, **kwargs):
         if len(values) != 4:
             raise ValueError("crop_box must contain exactly 4 values x,y,width,height")
         raise ValueError("crop_box processor got the following error"
-                         "when processing the value %s\n%s" % (ci_box, ex.message))
+                         "when processing the value %s\n%s" % (ci_box, str(ex)))
 
     if min(width, height, width + x + 1, height + y + 1) <= 0:
         # Uninitialized or meaningless value
