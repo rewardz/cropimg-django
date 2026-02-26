@@ -28,3 +28,9 @@ build_with_django_18:
 	@echo "Starting Docker build..."
 	docker build -t cropimg-django18 --build-arg REQUIREMENTS_FILE=requirements/django18/test.txt .
 	docker run -it --rm cropimg-django18
+
+# Start build with django version 1.11 and python 3.7 and start container
+build_with_django_111_python_37:
+	@echo "Starting Docker build..."
+	docker build -f Dockerfile_37_111 -t cropimg-django-111-37 --build-arg REQUIREMENTS_FILE=requirements/python3_django111/test.txt .
+	docker run -it --rm cropimg-django-111-37
