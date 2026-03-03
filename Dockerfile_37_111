@@ -1,0 +1,36 @@
+# ---------- Base image ----------
+FROM python:3.7-slim-bullseye AS base
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
+
+ARG REQUIREMENTS_FILE=requirements/python3_django111/requirements-testing.txt
+
+WORKDIR /code
+
+# System deps only
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    curl \
+    libjpeg-dev \
+    zlib1g-dev \
+    libfreetype6-dev \
+    ca-certificates \
+ && rm -rf /var/lib/apt/lists/*
+
+# Lock tooling to last Py3.7-compatible versions
+RUN pip install --no-cache-dir --upgrade \
+    pip==23.2.1 \
+    setuptools==68.0.0 \
+    wheel==0.41.2
+
+COPY requirements/ /code/requirements/
+
+# ---------- Django image ----------
+FROM base AS django-rest-framework-api-key
+
+RUN pip install --no-cache-dir -r /code/${REQUIREMENTS_FILE}
+
+COPY . /code/
+
+CMD ["make", "test_with_coverage"]
