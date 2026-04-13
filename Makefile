@@ -1,4 +1,4 @@
-.PHONY: help install_django18 test test_with_coverage build_with_django_18
+.PHONY: help install_django18 test test_with_coverage build_with_django_18 build_with_django_111
 
 # Default target
 help:
@@ -7,6 +7,7 @@ help:
 	@echo "  make test      - Run all test cases"
 	@echo "  make test_with_coverage - Run tests with coverage report"
 	@echo "  make build_with_django_18 - Build and run docker image with django 1.8"
+	@echo "  make build_with_django_111 - Build and run docker image with django 1.11"
 
 # Install dependencies
 install_django18:
@@ -28,3 +29,9 @@ build_with_django_18:
 	@echo "Starting Docker build..."
 	docker build -t cropimg-django18 --build-arg REQUIREMENTS_FILE=requirements/django18/test.txt .
 	docker run -it --rm cropimg-django18
+
+# Start build with django version 1.11 and start container
+build_with_django_111:
+	@echo "Starting Docker build..."
+	docker build -t cropimg-django111 --build-arg REQUIREMENTS_FILE=requirements/django111/test.txt .
+	docker run -it --rm cropimg-django111

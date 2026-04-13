@@ -86,8 +86,8 @@ spec:
     AWS_REGION = 'ap-southeast-1'
     SOURCE_BRANCH = "${env.CHANGE_BRANCH}"
     tags = setTags(SOURCE_BRANCH, PR_NUM)
-    IMAGE_TAG = "${tags.IMAGE_TAG}"
-    CACHE_TAG = "${tags.CACHE_TAG}"
+    IMAGE_TAG_1_8 = "1-8-${tags.IMAGE_TAG}"
+    IMAGE_TAG_1_11 = "1-11-${tags.IMAGE_TAG}"
     DOCKERFILE = 'Dockerfile'
   }
   stages {
@@ -113,16 +113,11 @@ spec:
     }
     stage('Build Image & Setup Infra') {
       parallel {
-        stage('Build docker image') {
+        stage('Build docker image Django 1.8') {
           steps {
             container('nerdctl') {
               script {
                 dockerLogin(ECR_REGISTRY, AWS_REGION)
-                
-                // Determine cache source: use CACHE_TAG if exists, else fallback to 'dev-cache'
-                def cacheFromRef = getCacheFromRef(ECR_REGISTRY, FINAL_IMAGE, CACHE_TAG, AWS_REGION)
-                echo "Using cache from: ${cacheFromRef}"
-                
                 sh """
                   # Wait for buildkit to be ready
                   until buildctl --addr unix:///run/buildkit/buildkitd.sock debug workers; do
@@ -141,13 +136,45 @@ spec:
                   nerdctl build \
                     --file ${DOCKERFILE} \
                     --target cropimg \
-                    --progress=plain -t ${ECR_REGISTRY}/${FINAL_IMAGE}:${IMAGE_TAG} \
-                    --cache-to mode=max,image-manifest=true,oci-mediatypes=true,type=registry,ref=${ECR_REGISTRY}/${FINAL_IMAGE}:${CACHE_TAG} \
-                    --cache-from type=registry,ref=${cacheFromRef} .
-                  nerdctl push ${ECR_REGISTRY}/${FINAL_IMAGE}:${IMAGE_TAG}
+                    --progress=plain -t ${ECR_REGISTRY}/${FINAL_IMAGE}:${IMAGE_TAG_1_8} .
+                  nerdctl push ${ECR_REGISTRY}/${FINAL_IMAGE}:${IMAGE_TAG_1_8}
                   
                   echo "Cleaning up final image from local storage"
-                  nerdctl rmi ${ECR_REGISTRY}/${FINAL_IMAGE}:${IMAGE_TAG} || echo "Final image already removed"
+                  nerdctl rmi ${ECR_REGISTRY}/${FINAL_IMAGE}:${IMAGE_TAG_1_8} || echo "Final image already removed"
+                """
+              }
+            }
+          }
+        }
+        stage('Build docker image Django 1.11') {
+          steps {
+            container('nerdctl') {
+              script {
+                dockerLogin(ECR_REGISTRY, AWS_REGION)
+                sh """
+                  # Wait for buildkit to be ready
+                  until buildctl --addr unix:///run/buildkit/buildkitd.sock debug workers; do
+                    echo "Waiting for buildkit to be ready..."
+                    sleep 5
+                  done
+
+                  cd cropimg-django
+                  
+                  ls -lah
+
+                  # Set BUILDKIT_HOST for nerdctl
+                  export BUILDKIT_HOST=unix:///run/buildkit/buildkitd.sock
+
+                  echo Build Final Image
+                  nerdctl build \
+                    --file ${DOCKERFILE} \
+                    --target cropimg \
+                    --build-arg REQUIREMENTS_FILE=requirements/django111/test.txt \
+                    --progress=plain -t ${ECR_REGISTRY}/${FINAL_IMAGE}:${IMAGE_TAG_1_11} .
+                  nerdctl push ${ECR_REGISTRY}/${FINAL_IMAGE}:${IMAGE_TAG_1_11}
+                  
+                  echo "Cleaning up final image from local storage"
+                  nerdctl rmi ${ECR_REGISTRY}/${FINAL_IMAGE}:${IMAGE_TAG_1_11} || echo "Final image already removed"
                 """
               }
             }
@@ -170,57 +197,115 @@ spec:
       }
     }
     stage('Run Test') {
-      agent {
-          kubernetes {
-              yaml """
-          apiVersion: v1
-          kind: Pod
-          metadata:
-            name: backend
-            namespace: ${NAMESPACE}
-          spec:
-            tolerations:
-              - key: "cicd"
-                operator: "Exists"
-                effect: "NoSchedule"
-            affinity:
-              nodeAffinity:
-                requiredDuringSchedulingIgnoredDuringExecution:
-                  nodeSelectorTerms:
-                  - matchExpressions:
-                    - key: app
-                      operator: In
-                      values: ['cicd']
-            containers:
-              - name: backend
-                image: ${ECR_REGISTRY}/${FINAL_IMAGE}:${IMAGE_TAG}
-                imagePullPolicy: Always
-                command:
-                  - cat
-                tty: true
-                resources:
-                  limits:
-                      cpu: "256m"
-                      memory: "256Mi"
-                  requests:
-                      cpu: "256m"
-                      memory: "256Mi"
-          """
+      parallel {
+        stage('Run Test Django 1.8') {
+          agent {
+              kubernetes {
+                  yaml """
+              apiVersion: v1
+              kind: Pod
+              metadata:
+                name: backend-1-8
+                namespace: ${NAMESPACE}
+              spec:
+                tolerations:
+                  - key: "cicd"
+                    operator: "Exists"
+                    effect: "NoSchedule"
+                affinity:
+                  nodeAffinity:
+                    requiredDuringSchedulingIgnoredDuringExecution:
+                      nodeSelectorTerms:
+                      - matchExpressions:
+                        - key: app
+                          operator: In
+                          values: ['cicd']
+                containers:
+                  - name: backend
+                    image: ${ECR_REGISTRY}/${FINAL_IMAGE}:${IMAGE_TAG_1_8}
+                    imagePullPolicy: Always
+                    command:
+                      - cat
+                    tty: true
+                    resources:
+                      limits:
+                          cpu: "256m"
+                          memory: "256Mi"
+                      requests:
+                          cpu: "256m"
+                          memory: "256Mi"
+              """
+              }
           }
-      }
-      steps {
-          container('backend') {
-              script {
-                  try {
-                      sh """
-                        cd /code && python -m pytest --cov=cropimg --cov-report=term-missing
-                      """
-                  } catch (Exception e) {
-                      echo "Tests failed"
-                      throw e
+          steps {
+              container('backend') {
+                  script {
+                      try {
+                          sh """
+                            cd /code && python -m pytest --cov=cropimg --cov-report=term-missing
+                          """
+                      } catch (Exception e) {
+                          echo "Tests failed"
+                          throw e
+                      }
                   }
               }
           }
+        }
+        stage('Run Test Django 1.11') {
+          agent {
+              kubernetes {
+                  yaml """
+              apiVersion: v1
+              kind: Pod
+              metadata:
+                name: backend-1-11
+                namespace: ${NAMESPACE}
+              spec:
+                tolerations:
+                  - key: "cicd"
+                    operator: "Exists"
+                    effect: "NoSchedule"
+                affinity:
+                  nodeAffinity:
+                    requiredDuringSchedulingIgnoredDuringExecution:
+                      nodeSelectorTerms:
+                      - matchExpressions:
+                        - key: app
+                          operator: In
+                          values: ['cicd']
+                containers:
+                  - name: backend
+                    image: ${ECR_REGISTRY}/${FINAL_IMAGE}:${IMAGE_TAG_1_11}
+                    imagePullPolicy: Always
+                    command:
+                      - cat
+                    tty: true
+                    resources:
+                      limits:
+                          cpu: "256m"
+                          memory: "256Mi"
+                      requests:
+                          cpu: "256m"
+                          memory: "256Mi"
+              """
+              }
+          }
+          steps {
+              container('backend') {
+                  script {
+                      try {
+                          sh """
+                            cd /code && python -m pytest --cov=cropimg --cov-report=term-missing
+                          """
+                      } catch (Exception e) {
+                          echo "Tests failed"
+                          throw e
+                      }
+                  }
+              }
+          }
+        }
       }
     }
   }
@@ -256,32 +341,4 @@ def setTags(SOURCE_BRANCH, PR_NUM) {
     }
 
     return [IMAGE_TAG: IMAGE_TAG, CACHE_TAG: CACHE_TAG]
-}
-
-def getCacheFromRef(ecrRegistry, repoName, cacheTag, awsRegion) {
-    // Check if CACHE_TAG exists in ECR
-    def cacheTagExists = sh(
-        script: "aws ecr describe-images --repository-name ${repoName} --image-ids imageTag=${cacheTag} --region ${awsRegion} > /dev/null 2>&1",
-        returnStatus: true
-    ) == 0
-
-    if (cacheTagExists) {
-        echo "Cache with tag ${cacheTag} found in ECR, using it as cache source"
-        return "${ecrRegistry}/${repoName}:${cacheTag}"
-    }
-
-    // Fallback to dev-cache tag
-    def devCacheExists = sh(
-        script: "aws ecr describe-images --repository-name ${repoName} --image-ids imageTag=dev-cache --region ${awsRegion} > /dev/null 2>&1",
-        returnStatus: true
-    ) == 0
-
-    if (devCacheExists) {
-        echo "Falling back to 'dev-cache' tag as cache source"
-        return "${ecrRegistry}/${repoName}:dev-cache"
-    }
-
-    // No cache available, return the original cache tag (will just miss cache)
-    echo "No existing cache found, will create new cache with tag: ${cacheTag}"
-    return "${ecrRegistry}/${repoName}:${cacheTag}"
 }
