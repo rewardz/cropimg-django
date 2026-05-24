@@ -1,4 +1,4 @@
-.PHONY: help install_django18 test test_with_coverage build_with_django_18 build_with_django_111
+.PHONY: help install_django18 test test_with_coverage build_with_django_18 build_with_django_111 build_with_django_111_python_37
 
 # Default target
 help:
@@ -8,6 +8,7 @@ help:
 	@echo "  make test_with_coverage - Run tests with coverage report"
 	@echo "  make build_with_django_18 - Build and run docker image with django 1.8"
 	@echo "  make build_with_django_111 - Build and run docker image with django 1.11"
+	@echo "  make build_with_django_111_python_37 - Build and run docker image with django 1.11 and python 3.7"
 
 # Install dependencies
 install_django18:
