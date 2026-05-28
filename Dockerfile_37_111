@@ -4,7 +4,7 @@ FROM python:3.7-slim-bullseye AS base
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
 
-ARG REQUIREMENTS_FILE=requirements/python3_django111/requirements-testing.txt
+ARG REQUIREMENTS_FILE=requirements/python3_django111/test.txt
 
 WORKDIR /code
 
@@ -27,7 +27,9 @@ RUN pip install --no-cache-dir --upgrade \
 COPY requirements/ /code/requirements/
 
 # ---------- Django image ----------
-FROM base AS django-rest-framework-api-key
+FROM base AS django-cropimg
+
+ARG REQUIREMENTS_FILE=requirements/python3_django111/test.txt
 
 RUN pip install --no-cache-dir -r /code/${REQUIREMENTS_FILE}
 
