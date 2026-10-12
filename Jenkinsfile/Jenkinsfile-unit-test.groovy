@@ -93,7 +93,7 @@ spec:
   stages {
     stage ('init') {
       steps {
-        smartRetry(profile: 'infra', maxRetries: 2, backoff: 'fixed', initialDelaySeconds: 3) {
+        smartRetry(profile: 'conservative', maxRetries: 2, backoff: 'fixed', initialDelaySeconds: 3) {
             checkout([$class: 'GitSCM', branches: [[name: "${env.CHANGE_BRANCH}"]], extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'cropimg-django']], userRemoteConfigs: [[credentialsId: 'github-app-rewardz', url: 'https://github.com/rewardz/cropimg-django.git']]])
         }
         
